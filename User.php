@@ -1,167 +1,136 @@
 <?php
+class User{
 
-class User {
+    private $id;
+    public $login;
+    public $password;
+    public $email;
+    public $firstname;
+    public $lastname;
+    public $bdd;
 
-    private $id, $password;
-    public $login, $email, $firstname, $lastname, $connexion;
-
-    public function __construct() { 
-
-        $bdd = mysqli_connect('localhost','root','','classes');
-        $this->connexion = $bdd;
-    
+    public function __construct(){
+        $this ->bdd = mysqli_connect('localhost','root','','classes');
+        mysqli_set_charset($this ->bdd, 'utf8');
+        return $this -> bdd;
     }
 
-    public function register($login,$password,$email,$firstname,$lastname){
-        
-        $query = mysqli_query($this->connexion, "INSERT INTO utilisateurs(login, password, email, firstname, lastname) VALUES ('$login','$password','$email','$firstname','$lastname')");
-        $query2 = mysqli_query($this->connexion,"SELECT * FROM utilisateurs Where login = '$login'");
-        $result = mysqli_fetch_assoc($query2);
-
-        var_dump ($result);
-
+    public function register($login, $password, $email, $firstname, $lastname){
+        $requete = mysqli_query($this->bdd, "INSERT INTO `utilisateurs`( `login`, `password`, `email`, `firstname`, `lastname`) VALUES ('$login', '$password', '$email', '$firstname', '$lastname')");
+        echo'<table>
+        <thead>
+            <th>login</th>
+            <th>password</th>
+            <th>email</th>
+            <th>Firstname</th>
+            <th>Lastname</th>
+        </thead>
+        <tbody>
+            <td>'.$login.'</td>
+            <td>'.$password.'</td>
+            <td>'.$email.'</td>
+            <td>'.$firstname.'</td>
+            <td>'.$lastname.'</td>
+        </tbody>
+    </table>';
     }
-    
     public function connect($login, $password){
-
-        $req = "SELECT login, password FROM utilisateurs WHERE login='$login'";
-        $query = mysqli_query($this->connexion,$req); 
-        $result = mysqli_fetch_assoc($query);
-
-        if ($password == $result['password'] && $login == $result ['login']){
-            
-            $_SESSION['login'] = $result['login'];
-            $this->login = $result['login'];
-            $this->password = $result['password'];
-            echo "Vous êtes connecté !";
-
-        }
-
-        else {
-
-            echo "Login ou mot de passe incorrect";
-        
+        $requete4 = mysqli_query($this -> bdd,"SELECT * FROM utilisateurs WHERE login = '$login' AND password = '$password'");
+        $utilisateur = mysqli_fetch_all($requete4, MYSQLI_ASSOC);
+        if(count($utilisateur) > 0){
+            session_start();
+            $_SESSION['utilisateur'] = [
+                'login' => $utilisateur[0]['login'],
+                'password' => $utilisateur[0]['password'],
+                'email' => $utilisateur[0]['email'],
+                'firstname' => $utilisateur[0]['firstname'],
+                'lastname' => $utilisateur[0]['lastname'],
+            ];
         }
     }
-
-    public function disconnect() {
-
+    public function disconnect(){
+        session_start();
         session_destroy();
-        echo "Vous êtes déconnecté !";
-
     }
-
-    public function delete() {
-
-        $login = $_SESSION['login'];
-        $query = mysqli_query($this->connexion,"DELETE FROM utilisateurs WHERE login='$login'");
-        
+    public function delete(){
+        $requete2 = mysqli_query($this->bdd, 'DELETE FROM `utilisateurs` WHERE 20');
         session_destroy();
-        
-        echo "Votre compte a été supprimé.";
-
     }
-
-    public function update($login,$password,$email,$firstname,$lastname){
-        
-        $this->login = $_SESSION['login'];
-        $req = "SELECT * FROM utilisateurs where login = '$this->login'";
-        $query = mysqli_query($this->connexion, $req);
-        $result = mysqli_fetch_assoc($query);
-        $this->id = $result['id'];
-       
-        $req2 = "UPDATE `utilisateurs` SET `login`='$login',`password`='$password',`email`='$email',`firstname`='$firstname',`lastname`='$lastname' WHERE id = '$this->id'";
-        $query2 = mysqli_query($this->connexion, $req2);
-
-        echo "Profil mis à jour.";
-
+    public function update($login, $password, $email, $firstname, $lastname){
+        $requete3 = mysqli_query($this->bdd, "UPDATE `utilisateurs` SET `login`= '$login',`password`= '$password',`email`= '$email',`firstname`= '$firstname',`lastname`= '$lastname'");
     }
-
-    public function isConnected() {
-
-        $result = null;
-
-        if (isset($_SESSION['login'])){
-
-            $result = true;
-            echo "Vous êtes connecté.";
-
+    public function isConnected(){
+        if(!empty($_SESSION['utilisateur'])){
+            return true;
         }
-
-        else {
-
-            $result = false;
-            echo "Vous n'êtes pas connecté.";
-            
+        else{
+            return false;
         }
-        
-        return $result;
-
     }
+    public function getAllinfos(){
 
-    public function getAllInfos() {
-
-        $this->login = $_SESSION['login']; 
-        $req = "SELECT * FROM utilisateurs WHERE login = '$this->login'";
-        $query = mysqli_query($this->connexion, $req);
-        $result = mysqli_fetch_assoc($query);
-        
-        var_dump ($result);
-
+        echo'<table>
+                <thead>
+                    <th>login</th>
+                    <th>password</th>
+                    <th>email</th>
+                    <th>Firstname</th>
+                    <th>Lastname</th>
+                </thead>
+                <tbody>
+                    <td>'.$_SESSION['utilisateur']['login'].'</td>
+                    <td>'.$_SESSION['utilisateur']['password'].'</td>
+                    <td>'.$_SESSION['utilisateur']['email'].'</td>
+                    <td>'.$_SESSION['utilisateur']['firstname'].'</td>
+                    <td>'.$_SESSION['utilisateur']['lastname'].'</td>
+                </tbody>
+            </table>';
     }
-
-    public function getLogin () {
-
-        $this->login = $_SESSION['login'];
-        $req = "SELECT login FROM utilisateurs WHERE login = '$this->login'";
-        $query = mysqli_query($this->connexion, $req);
-        $result = mysqli_fetch_assoc($query);
-        
-        $this->login = $result['login'];
-        
-        echo $this->login;
-        
+    public function getLogin(){
+        return $this -> login;
     }
-
-    public function getEmail() {
-
-        $this->login = $_SESSION['login'];
-        $req = "SELECT email FROM utilisateurs WHERE login = '$this->login'";
-        $query = mysqli_query($this->connexion, $req);
-        $result = mysqli_fetch_assoc($query);
-
-        $this->email = $result['email'];
-
-        echo $this->email;
-
+    public function getPassword(){
+        return $this -> password;
     }
-
-    public function getFirstname() {
-
-        $this->login = $_SESSION['login'];
-        $req = "SELECT firstname FROM utilisateurs WHERE login = '$this->login'";
-        $query = mysqli_query($this->connexion, $req);
-        $result = mysqli_fetch_assoc($query);
-
-        $this->firstname = $result['firstname'];
-
-        echo $this->firstname;
-
+    public function getEmail(){
+        return $this -> email;
     }
-
-    public function getLastname() {
-
-        $this->login = $_SESSION['login'];
-        $req = "SELECT lastname FROM utilisateurs WHERE login = '$this->login'";
-        $query = mysqli_query($this->connexion, $req);
-        $result = mysqli_fetch_assoc($query);
-
-        $this->lastname = $result['lastname'];
-
-        echo $this->lastname;
+    public function getFirstname(){
+        return $this -> firstname;
+    }
+    public function getLastname(){
+        return $this -> lastname;
     }
 
 }
+$personne = new User;
 
+
+    $login = $_POST['login'];
+    $password = $_POST['password'];
+    $email = $_POST['email'];
+    $firstname = $_POST['firstname'];
+    $lastname = $_POST['lastname'];
+    $personne -> register($login, $password, $email, $firstname, $lastname);
 
 ?>
+<html>
+    <form action="" method="post">
+            <label for="login">Login</label>
+            <input type="text" id="login" name="login">
+
+            <label for="password">password</label>
+            <input type="password" id="password" name="password">
+
+            <label for="email">email</label>
+            <input type="email" id="email" name="email">
+
+            <label for="firstname">firstname</label>
+            <input type="firstname" id="firstname" name="firstname">
+
+            <label for="lastname">lastname</label>
+            <input type="lastname" id="lastname" name="lastname">
+
+            <input type="submit" value="inscription">
+    </form>
+</html>
